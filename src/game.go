@@ -14,11 +14,7 @@ const (
 )
 
 func main() {
-	universe := NewUniverse()
-	fmt.Println(len(universe))
-	fmt.Println(len(universe[0]))
-	Seed(universe)
-	Show(universe)
+	RunGame()
 }
 
 func NewUniverse() Universe {
@@ -48,13 +44,12 @@ func Show(u Universe) {
 	}
 }
 
-func Seed(u Universe) {
+func Seed(u Universe, percentAlive int) {
 	rand.Seed(time.Now().UnixNano())
 	for i := 0; i < width; i++ {
 		for j := 0; j < height; j++ {
-			randNum := rand.Intn(4)
-			// 25% chance of being alive
-			if randNum == 0 {
+			randNum := rand.Intn(101)
+			if randNum <= percentAlive {
 				u[i][j] = true
 			}
 		}
@@ -106,15 +101,48 @@ func (u Universe) GetNumAliveNeighbors(x, y int) int {
 }
 
 // should be called next
-func Next(x int, y int, universe Universe) {
-	numNeighbors := universe.GetNumAliveNeighbors(x, y)
+func (u Universe) Next(x int, y int) bool {
+	numNeighbors := u.GetNumAliveNeighbors(x, y)
 	if numNeighbors < 2 || numNeighbors > 3 {
-		universe[x][y] = false
-	} else if numNeighbors == 3 && !universe[x][y] {
-		universe[x][y] = true
+		return false
+	} else if numNeighbors == 3 && !u[x][y] {
+		return true
+	} else {
+		return u[x][y]
 	}
 	// < 2 alive neighbors - dies
 	// > 3 alive neighbors - dies
 	// alive cell with [2, 3] alive neighbors - lives
 	// dead cell [3] alive neighbors - turns alive
+}
+
+func Step(a, b Universe) {
+	for x := range a {
+		for y := range a[x] {
+			b[x][y] = a.Next(x, y)
+		}
+	}
+}
+
+func ClearScreen() {
+	// should check for the os here before doing this
+	fmt.Print("\033[H\033[2J") // clear screen for macos
+}
+
+func RunGame() {
+	generation := 0
+	universe := NewUniverse()
+	b := NewUniverse()
+	Seed(universe, 50)
+	for {
+		fmt.Println("Generation: ", generation)
+		Show(universe)
+		time.Sleep(3 * time.Second)
+		// ClearScreen()
+		fmt.Println()
+		Step(universe, b)
+		universe = b
+		generation++
+	}
+
 }
