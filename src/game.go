@@ -135,9 +135,10 @@ func RunGame() {
 	b := NewUniverse()
 	Seed(universe, 50)
 	for {
+		ClearScreen()
 		fmt.Println("Generation: ", generation)
 		Show(universe)
-		time.Sleep(3 * time.Second)
+		time.Sleep(1 * time.Second)
 		// ClearScreen()
 		fmt.Println()
 		Step(universe, b)
